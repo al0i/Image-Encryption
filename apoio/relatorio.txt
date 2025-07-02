@@ -1,0 +1,135 @@
+Código 1 - Próprio:
+from utils.map_pixels import map_pixels
+
+def spiral_map_pixels(img):
+    map = map_pixels(img)
+    spiral_map = {}
+
+    #Define directions
+    right = (1,0)
+    up = (0, -1)
+    left = (-1, 0)
+    down = (0, 1)
+
+    directions = [None] * 4
+    #Choice the best direction to start.
+    if img.width%2 == 0:
+        directions[0] = left
+        directions[2] = right
+    else:
+        directions[0] = right
+        directions[2] = left
+    
+    if img.height%2 == 0:
+        directions[1] = up
+        directions[3] = down
+    else:
+        directions[1] = down
+        directions[3] = up
+    
+    #print(directions)
+
+    #Start in the center
+    x = img.width // 2
+    y = img.height // 2
+    
+    steps = 1
+
+    visiteds = [(x,y)]
+
+    while len(visiteds) < img.width * img.height: #Não funciona para imagens desproporcionais
+        for i in range(4): #Number of directions
+            xDirection, yDirection = directions[i]
+            for j in range(steps):
+                x += xDirection
+                y += yDirection
+                #print(x, y)
+                if 0 <= x < img.width and 0 <= y < img.height:
+                    if (x, y) not in visiteds:
+                        #print("Added.")
+                        visiteds.append((x,y))
+                else:
+                    break
+                
+                
+            if i % 2 == 1:
+                steps += 1
+    
+    cont = 0
+    for i in map.values():
+        spiral_map[visiteds[cont]] = i
+        cont += 1
+    
+    return spiral_map
+
+#TEMPO DE EXECUÇÃO: 598 SEGUNDOS
+-------------------------------------------------------------------------
+Código 2 - Deepseek:
+
+import numpy as np
+from utils.map_pixels import map_pixels
+
+def spiral_map_pixels(img):
+    # Dimensões da imagem
+    w, h = img.width, img.height
+    total_pixels = w * h
+    
+    # Obter o mapa original de pixels
+    pixel_map = map_pixels(img)
+    
+    # Pré-alocar arrays numpy para coordenadas
+    coords = np.zeros((total_pixels, 2), dtype=np.int32)
+    visited = np.zeros((w, h), dtype=np.bool_)
+    
+    # Direções: direita, baixo, esquerda, cima
+    directions = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+    dir_idx = 0
+    
+    # Posição inicial (centro)
+    x, y = w // 2, h // 2
+    coords[0] = (x, y)
+    visited[x, y] = True
+    
+    # Controle do padrão em espiral
+    step_size = 1
+    step_count = 0
+    pixels_placed = 1
+    
+    while pixels_placed < total_pixels:
+        dx, dy = directions[dir_idx]
+        
+        for _ in range(step_size):
+            x += dx
+            y += dy
+            
+            # Verificar limites e se já foi visitado
+            if 0 <= x < w and 0 <= y < h and not visited[x, y]:
+                coords[pixels_placed] = (x, y)
+                visited[x, y] = True
+                pixels_placed += 1
+                
+                if pixels_placed >= total_pixels:
+                    break
+            else:
+                # Reverter movimento inválido
+                x -= dx
+                y -= dy
+                break
+        
+        # Mudar direção e ajustar o tamanho do passo
+        dir_idx = (dir_idx + 1) % 4
+        step_count += 1
+        if step_count % 2 == 0:
+            step_size += 1
+    
+    # Criar o dicionário final de forma otimizada
+    spiral_map = {}
+    pixel_items = list(pixel_map.items())
+    
+    # Usar zip para parear coordenadas com valores - mais rápido que loop com índice
+    for coord, value in zip(coords, pixel_items):
+        spiral_map[tuple(coord)] = value[1]
+    
+    return spiral_map
+
+#TEMPO DE EXECUÇÃO: 1 SEGUNDO

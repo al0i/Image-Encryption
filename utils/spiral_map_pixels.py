@@ -3,42 +3,57 @@ from utils.map_pixels import map_pixels
 def spiral_map_pixels(img):
     map = map_pixels(img)
     spiral_map = {}
-
-    #Define directions
-    right = (1,0)
-    up = (0, -1)
-    left = (-1, 0)
-    down = (0, 1)
-    directions = [right, up, left, down]
-
-    #Start in the center
-    x = img.width // 2
-    y = img.height // 2
-
-    steps = 1
-
-    visiteds = [(x,y)]
-
-    while len(visiteds) < img.width * img.height:
-        for i in range(4): #Number of directions
-            xDirection, yDirection = directions[i]
-            for j in range(steps):
-                x += xDirection
-                y += yDirection
-                print(x, y)
-                if 0 <= x < img.width and 0 <= y < img.height:
-                    if (x, y) not in visiteds:
-                        visiteds.append((x,y))
-                else:
-                    break
-                
-                
-            if i % 2 == 1:
-                steps += 1
+    width, height = img.width, img.height
+    total_pixels = width * height
     
-    cont = 0
-    for i in map.values():
-        spiral_map[visiteds[cont]] = i
-        cont += 1
+    # Direções na ordem: direita, baixo, esquerda, cima
+    directions = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+    direction_index = 0
+    
+    # Começar no centro
+    x = width // 2
+    y = height // 2
+    
+    # Usar um conjunto para verificação mais rápida
+    visited = set()
+    visited.add((x, y))
+    
+    # Pré-alocar a lista de visitados
+    visited_order = [(x, y)]
+    visited_order.extend([None] * (total_pixels - 1))
+    
+    steps = 1
+    current_step = 0
+    step_increase = False
+    
+    while len(visited_order) < total_pixels:
+        dx, dy = directions[direction_index]
+        
+        for _ in range(steps):
+            x += dx
+            y += dy
+            
+            if 0 <= x < width and 0 <= y < height and (x, y) not in visited:
+                visited.add((x, y))
+                visited_order[len(visited)] = (x, y)  # Usando o tamanho do conjunto como índice
+            else:
+                # Desfazer o último movimento inválido
+                x -= dx
+                y -= dy
+                break
+        
+        direction_index = (direction_index + 1) % 4
+        current_step += 1
+        
+        if current_step % 2 == 0:
+            steps += 1
+    
+    # Mapear as coordenadas na ordem espiral
+    for idx, coord in enumerate(visited_order):
+        if coord in map:  # Isso pode não ser necessário dependendo da implementação do map_pixels
+            spiral_map[coord] = map[coord]
+        else:
+            # Lidar com casos onde a coordenada não está no mapa original
+            pass
     
     return spiral_map
